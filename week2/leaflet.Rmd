@@ -1,0 +1,71 @@
+---
+title: "Leaflet Project"
+author: "Ryan Jolicoeur"
+date: "April 28, 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(dplyr)
+library(leaflet)
+library(zipcode)
+library(readr)
+
+setwd("C:/Users/Ryan/Documents/Data_Science_Studies/Developing Data Products/New_Assignment")
+
+options(scipen=999)
+
+```
+
+## Leaflet Plotting Project
+In this project we are going to load zipcode data that has been locally downloaded.
+The zip code data includes metrics such as: 
+
+  + Population
+  + Timezone
+  + City
+  + State
+  + Zip Code
+  + Area Code
+
+In order to place a limit on the zip codes that are read in we will set a threshold of 50,000.  Meaning there will not be any zip codes included that are below a population of 50,000 from our analyzed data set. I also decided to utilize the zipcode package in order to limit the potential incorrect zip formatting I would have.  This package does filtering to: 
+
+  + Insure that all zip codes are 5 digits
+  + Include leading 0's if necessary
+  + Remove the plus 4 zip code sub indicators if included
+```{r Zip_Code_Data}
+list.files()
+Zip_Data <- read_csv("zip_code_database.csv")
+
+Zip_Data <- Zip_Data %>% 
+              filter(irs_estimated_population_2015 > 50000)
+
+Zip_Data$zip   <- clean.zipcodes(Zip_Data$zip)
+```
+
+## Leaflet Map
+
+For this step here is where we plot the leaflet dataset.  There are a couple of 
+choices that were made in order to analyze the data and to clean the options.  
+
+  + Place popup's on my map to show additional details
+  + Utilize the break line option to place multiple items in the popup <br>
+  + Add the marker cluster options to true to cluster upon resolution
+
+```{r Map_Data}
+Zip_Map <- Zip_Data  %>% 
+           leaflet() %>%
+            addTiles() %>%
+            addMarkers( lng = Zip_Data$longitude, 
+                        lat = Zip_Data$latitude,
+                        popup = paste("Population 2015:", Zip_Data$irs_estimated_population_2015, "<br>",
+                                      "City:", Zip_Data$primary_city, "<br>",
+                                      "State:", Zip_Data$state, "<br>",
+                                      "Zip:", Zip_Data$zip, "<br>",
+                                      "Area_Code:", Zip_Data$area_codes, "<br>",
+                                      "Timezone:", Zip_Data$timezone), 
+                        clusterOptions = markerClusterOptions())
+Zip_Map
+```
+
+
